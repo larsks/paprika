@@ -35,9 +35,9 @@ class Paprika(object):
         url = f'{self.config.endpoint}/sync/recipes/'
         return self._get(url)
 
-    def fetch_one_recipe(self, uid, entity=None):
+    def fetch_one_recipe(self, uid, index=None):
         url = f'{self.config.endpoint}/sync/recipe/{uid}/'
-        return self._get(url), entity
+        return self._get(url), index
 
     def list_meals(self):
         url = f'{self.config.endpoint}/sync/meals/'
