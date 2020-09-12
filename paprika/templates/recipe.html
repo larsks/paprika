@@ -5,15 +5,23 @@
 <h2>Ingredients</h2>
 
 <ul>
-  {% for i in recipe.ingredients.splitlines() %}
-  <li>{{ i }}</li>
+  {% for line in recipe.ingredients.splitlines() %}
+  <li>{{ line }}</li>
   {% endfor %}
 </ul>
 
 <h2>Directions</h2>
 
-{% for i in recipe.directions.splitlines() %}
-<p>{{ i }}</p>
+{% for line in recipe.directions.splitlines() %}
+<p>{{ line }}</p>
 {% endfor %}
+
+{% if recipe.notes %}
+<h2>Notes</h2>
+
+{% for line in recipe.notes.splitlines() %}
+<p>{{ line }}</p>
+{% endfor %}
+{% endif %}
 
 {% endblock %}
