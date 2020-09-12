@@ -85,14 +85,27 @@ def search(ctx, ingredients, description, query):
     print(tabulate.tabulate(res))
 
 
+def xform_column(name, val):
+    if name == 'rating':
+        return '*' * val
+    elif name == 'name' and len(val) > 40:
+        return '{}...'.format(val[:40])
+
+    return val
+
+
 @main.command()
 @click.pass_context
 def list(ctx):
     LOG.info('listing all recipes')
+    columns = ['name', 'rating']
+
     api = Paprika(ctx.obj)
     api.bind()
     res = api.list()
-    print(tabulate.tabulate([r['id'], r['name']] for r in res))
+    print(tabulate.tabulate(
+        [r['id']] + [xform_column(column, r['data'].get(column))
+                     for column in columns] for r in res))
 
 
 @main.command()
