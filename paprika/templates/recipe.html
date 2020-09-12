@@ -2,6 +2,7 @@
 {% block title %}{{ recipe.name }}{% endblock %}
 {% block content %}
 
+<section id="ingredients">
 <h2>Ingredients</h2>
 
 <ul>
@@ -9,19 +10,24 @@
   <li>{{ line }}</li>
   {% endfor %}
 </ul>
+</section>
 
+<section id="directions">
 <h2>Directions</h2>
 
-{% for line in recipe.directions.splitlines() %}
+{% for line in recipe.directions|split_paragraph %}
 <p>{{ line }}</p>
 {% endfor %}
+</section>
 
 {% if recipe.notes %}
+<section id="notes">
 <h2>Notes</h2>
 
-{% for line in recipe.notes.splitlines() %}
+{% for line in recipe.notes.split_paragraph %}
 <p>{{ line }}</p>
 {% endfor %}
+</section>
 {% endif %}
 
 {% endblock %}

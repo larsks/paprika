@@ -3,6 +3,7 @@ import jinja2
 import json
 import logging
 import os
+import re
 import tabulate
 
 from dataclasses import dataclass
@@ -124,12 +125,17 @@ def fetch(ctx, username, password):
     api.fetch()
 
 
+def split_paragraph(val):
+    return re.split('\n+', val)
+
+
 @main.command()
 @click.argument('recipe_id')
 @click.pass_context
 def render(ctx, recipe_id):
     LOG.info('rendering recipe %s', recipe_id)
     env = jinja2.Environment(loader=jinja2.PackageLoader('paprika'))
+    env.filters['split_paragraph'] = split_paragraph
     template = env.get_template('recipe.html')
     api = Paprika(ctx.obj)
     api.bind()
