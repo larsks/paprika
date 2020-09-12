@@ -10,6 +10,7 @@ from pathlib import Path
 
 from paprika.api import Paprika
 
+LOG = logging.getLogger(__name__)
 LEVELS = ['WARNING', 'INFO', 'DEBUG']
 DEFAULT_CONFIG_FILE = (
     Path(os.environ.get('XDG_CONFIG_HOME', '~')) /
@@ -87,6 +88,7 @@ def search(ctx, ingredients, description, query):
 @main.command()
 @click.pass_context
 def list(ctx):
+    LOG.info('listing all recipes')
     api = Paprika(ctx.obj)
     api.bind()
     res = api.list()
@@ -98,6 +100,7 @@ def list(ctx):
 @click.option('-p', '--password')
 @click.pass_context
 def fetch(ctx, username, password):
+    LOG.info('fetching all recipes')
     if username:
         ctx.obj.paprika_username = username
     if password:
@@ -112,6 +115,7 @@ def fetch(ctx, username, password):
 @click.argument('recipe_id')
 @click.pass_context
 def render(ctx, recipe_id):
+    LOG.info('rendering recipe %s', recipe_id)
     env = jinja2.Environment(loader=jinja2.PackageLoader('paprika'))
     template = env.get_template('recipe.html')
     api = Paprika(ctx.obj)
@@ -125,6 +129,7 @@ def render(ctx, recipe_id):
 @click.argument('recipe_id')
 @click.pass_context
 def get(ctx, recipe_id):
+    LOG.info('get recipe %s', recipe_id)
     api = Paprika(ctx.obj)
     api.bind()
     recipe = api.get_by_id(recipe_id)
