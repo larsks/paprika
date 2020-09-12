@@ -79,17 +79,20 @@ class Paprika(object):
             if index:
                 index.hash = remote['hash']
                 index.last_update = datetime.utcnow()
+                recipe = Recipe[index]
+                recipe.data = remote
+                recipe.name = remote['name']
             else:
                 index = RecipeIndex(
                     uid=remote['uid'],
                     hash=remote['hash'],
                 )
 
-            Recipe(
-                id=index,
-                data=remote,
-                name=remote['name'],
-            )
+                Recipe(
+                    id=index,
+                    data=remote,
+                    name=remote['name']
+                )
 
     @orm.db_session
     def search(self, query, search_ingredients=False, search_description=False):
