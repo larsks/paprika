@@ -24,7 +24,7 @@
 <section id="notes">
 <h2>Notes</h2>
 
-{% for line in recipe.notes.split_paragraph %}
+{% for line in recipe.notes|split_paragraph %}
 <p>{{ line }}</p>
 {% endfor %}
 </section>
