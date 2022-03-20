@@ -10,11 +10,12 @@ class RecipeIndex(db.Entity):
     uid = orm.Required(str, unique=True, index=True)
     hash = orm.Required(str)
     last_update = orm.Required(datetime, default=datetime.utcnow)
-    recipe = orm.Optional('Recipe')
+    recipe = orm.Optional("Recipe")
 
 
 class Recipe(db.Entity):
     id = orm.PrimaryKey(RecipeIndex)
+    name = orm.Required(str)
     data = orm.Required(orm.Json)
 
 
