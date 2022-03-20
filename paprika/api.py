@@ -14,33 +14,30 @@ class Paprika(object):
         self.config = config
 
         self.session = requests.Session()
-        self.session.auth = (config.paprika_username,
-                             config.paprika_password)
+        self.session.auth = (config.paprika_username, config.paprika_password)
 
     def bind(self):
-        LOG.debug('binding to database')
-        db.bind(provider='sqlite',
-                filename=self.config.database,
-                create_db=True)
+        LOG.debug("binding to database")
+        db.bind(provider="sqlite", filename=self.config.database, create_db=True)
 
         db.generate_mapping(create_tables=True)
 
     def _get(self, url):
-        LOG.debug('fetch %s', url)
+        LOG.debug("fetch %s", url)
         res = self.session.get(url)
         res.raise_for_status()
         return res.json()
 
     def list_recipes(self):
-        url = f'{self.config.endpoint}/sync/recipes/'
+        url = f"{self.config.endpoint}/sync/recipes/"
         return self._get(url)
 
     def fetch_one_recipe(self, uid, index=None):
-        url = f'{self.config.endpoint}/sync/recipe/{uid}/'
+        url = f"{self.config.endpoint}/sync/recipe/{uid}/"
         return self._get(url), index
 
     def list_meals(self):
-        url = f'{self.config.endpoint}/sync/meals/'
+        url = f"{self.config.endpoint}/sync/meals/"
         return self._get(url)
 
     @orm.db_session
@@ -57,47 +54,38 @@ class Paprika(object):
         recipes = self.list_recipes()
         tasks = []
 
-        for recipe in recipes['result']:
-            LOG.debug('checking recipe uid %s', recipe['uid'])
-            index = RecipeIndex.get(uid=recipe['uid'])
+        for recipe in recipes["result"]:
+            LOG.debug("checking recipe uid %s", recipe["uid"])
+            index = RecipeIndex.get(uid=recipe["uid"])
 
-            if index is None or index.hash != recipe['hash']:
-                LOG.debug('recipe %s has changed', recipe['uid'])
-                tasks.append(
-                    pool.submit(self.fetch_one_recipe,
-                                recipe['uid'],
-                                index)
-                )
+            if index is None or index.hash != recipe["hash"]:
+                LOG.debug("recipe %s has changed", recipe["uid"])
+                tasks.append(pool.submit(self.fetch_one_recipe, recipe["uid"], index))
             else:
-                LOG.debug('recipe %s is unchanged', recipe['uid'])
+                LOG.debug("recipe %s is unchanged", recipe["uid"])
 
         for future in concurrent.futures.as_completed(tasks):
             data, index = future.result()
-            remote = data['result']
-            LOG.info('retrieved recipe %s (%s)', remote['uid'], remote['name'])
+            remote = data["result"]
+            LOG.info("retrieved recipe %s (%s)", remote["uid"], remote["name"])
 
             if index:
-                index.hash = remote['hash']
+                index.hash = remote["hash"]
                 index.last_update = datetime.utcnow()
                 recipe = Recipe[index]
                 recipe.data = remote
-                recipe.name = remote['name']
+                recipe.name = remote["name"]
             else:
                 index = RecipeIndex(
-                    uid=remote['uid'],
-                    hash=remote['hash'],
+                    uid=remote["uid"],
+                    hash=remote["hash"],
                 )
 
-                Recipe(
-                    id=index,
-                    data=remote,
-                    name=remote['name']
-                )
+                Recipe(id=index, data=remote, name=remote["name"])
 
     @orm.db_session
     def search(self, query, search_ingredients=False, search_description=False):
-        breakpoint()
-        res = Recipe.select(lambda r: query in r.data['name'])
+        res = Recipe.select(lambda r: query in r.data["name"])
 
         return [r.to_dict() for r in res]
 

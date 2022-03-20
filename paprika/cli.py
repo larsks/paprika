@@ -12,16 +12,14 @@ from pathlib import Path
 from paprika.api import Paprika
 
 LOG = logging.getLogger(__name__)
-LEVELS = ['WARNING', 'INFO', 'DEBUG']
+LEVELS = ["WARNING", "INFO", "DEBUG"]
 DEFAULT_CONFIG_FILE = (
-    Path(os.environ.get('XDG_CONFIG_HOME', '~')) /
-    '.config' /
-    'paprika.json'
+    Path(os.environ.get("XDG_CONFIG_HOME", "~")) / ".config" / "paprika.json"
 ).expanduser()
-DEFAULT_ENDPOINT = 'https://www.paprikaapp.com/api/v1'
+DEFAULT_ENDPOINT = "https://www.paprikaapp.com/api/v1"
 DEFAULT_WORKERS = 5
 CONTEXT_SETTINGS = {
-    'auto_envvar_prefix': 'PAPRIKA',
+    "auto_envvar_prefix": "PAPRIKA",
 }
 
 
@@ -35,9 +33,9 @@ class Config:
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-@click.option('-f', '--config-file', default=DEFAULT_CONFIG_FILE)
-@click.option('-d', '--database', default='recipes.db')
-@click.option('-v', '--verbose', count=True, default=0)
+@click.option("-f", "--config-file", default=DEFAULT_CONFIG_FILE)
+@click.option("-d", "--database", default="recipes.db")
+@click.option("-v", "--verbose", count=True, default=0)
 @click.pass_context
 def main(ctx, database, verbose, config_file):
     ctx.obj = Config()
@@ -55,9 +53,7 @@ def main(ctx, database, verbose, config_file):
     if database:
         ctx.obj.database = database
 
-    loglevel = (
-        LEVELS[verbose] if verbose < len(LEVELS) else 'DEBUG'
-    )
+    loglevel = LEVELS[verbose] if verbose < len(LEVELS) else "DEBUG"
 
     logging.basicConfig(level=loglevel)
 
@@ -71,26 +67,25 @@ def debug(ctx):
 
 
 @main.command()
-@click.option('-i', '--ingredients', is_flag=True)
-@click.option('-d', '--description', is_flag=True)
-@click.argument('query')
+@click.option("-i", "--ingredients", is_flag=True)
+@click.option("-d", "--description", is_flag=True)
+@click.argument("query")
 @click.pass_context
 def search(ctx, ingredients, description, query):
     api = Paprika(ctx.obj)
     api.bind()
-    res = api.search(query,
-                     search_ingredients=ingredients,
-                     search_description=description)
+    res = api.search(
+        query, search_ingredients=ingredients, search_description=description
+    )
 
-    breakpoint()
     print(tabulate.tabulate(res))
 
 
 def xform_column(name, val):
-    if name == 'rating':
-        return '*' * val
-    elif name == 'name' and len(val) > 40:
-        return '{}...'.format(val[:40])
+    if name == "rating":
+        return "*" * val
+    elif name == "name" and len(val) > 40:
+        return "{}...".format(val[:40])
 
     return val
 
@@ -98,23 +93,27 @@ def xform_column(name, val):
 @main.command()
 @click.pass_context
 def list(ctx):
-    LOG.info('listing all recipes')
-    columns = ['name', 'rating']
+    LOG.info("listing all recipes")
+    columns = ["name", "rating"]
 
     api = Paprika(ctx.obj)
     api.bind()
     res = api.list()
-    print(tabulate.tabulate(
-        [r['id']] + [xform_column(column, r['data'].get(column))
-                     for column in columns] for r in res))
+    print(
+        tabulate.tabulate(
+            [r["id"]]
+            + [xform_column(column, r["data"].get(column)) for column in columns]
+            for r in res
+        )
+    )
 
 
 @main.command()
-@click.option('-u', '--username')
-@click.option('-p', '--password')
+@click.option("-u", "--username")
+@click.option("-p", "--password")
 @click.pass_context
 def fetch(ctx, username, password):
-    LOG.info('fetching all recipes')
+    LOG.info("fetching all recipes")
     if username:
         ctx.obj.paprika_username = username
     if password:
@@ -126,31 +125,31 @@ def fetch(ctx, username, password):
 
 
 def split_paragraph(val):
-    return re.split('\n+', val)
+    return re.split("\n+", val)
 
 
 @main.command()
-@click.argument('recipe_id')
+@click.argument("recipe_id")
 @click.pass_context
 def render(ctx, recipe_id):
-    LOG.info('rendering recipe %s', recipe_id)
-    env = jinja2.Environment(loader=jinja2.PackageLoader('paprika'))
-    env.filters['split_paragraph'] = split_paragraph
-    template = env.get_template('recipe.html')
+    LOG.info("rendering recipe %s", recipe_id)
+    env = jinja2.Environment(loader=jinja2.PackageLoader("paprika"))
+    env.filters["split_paragraph"] = split_paragraph
+    template = env.get_template("recipe.html")
     api = Paprika(ctx.obj)
     api.bind()
     recipe = api.get_by_id(recipe_id)
 
-    print(template.render(recipe=recipe['data']))
+    print(template.render(recipe=recipe["data"]))
 
 
 @main.command()
-@click.argument('recipe_id')
+@click.argument("recipe_id")
 @click.pass_context
 def get(ctx, recipe_id):
-    LOG.info('get recipe %s', recipe_id)
+    LOG.info("get recipe %s", recipe_id)
     api = Paprika(ctx.obj)
     api.bind()
     recipe = api.get_by_id(recipe_id)
 
-    print(json.dumps(recipe['data'], indent=2))
+    print(json.dumps(recipe["data"], indent=2))
