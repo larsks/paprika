@@ -1,3 +1,4 @@
+import code
 import concurrent.futures
 import logging
 import requests
@@ -9,41 +10,40 @@ from pony import orm
 LOG = logging.getLogger(__name__)
 
 
-class Paprika(object):
+class Paprika(requests.Session):
     def __init__(self, config):
-        self.config = config
+        super().__init__()
 
+        self.config = config
         self.session = requests.Session()
-        self.session.auth = (config.paprika_username, config.paprika_password)
+        self.auth = (config.paprika_username, config.paprika_password)
 
     def bind(self):
         LOG.debug("binding to database")
         db.bind(provider="sqlite", filename=self.config.database, create_db=True)
-
         db.generate_mapping(create_tables=True)
 
-    def _get(self, url):
-        LOG.debug("fetch %s", url)
-        res = self.session.get(url)
+    def request(self, method, url, **kwargs):
+        res = super().request(method, url, **kwargs)
         res.raise_for_status()
         return res.json()
 
     def list_recipes(self):
         url = f"{self.config.endpoint}/sync/recipes/"
-        return self._get(url)
+        return self.get(url)
 
     def fetch_one_recipe(self, uid, index=None):
         url = f"{self.config.endpoint}/sync/recipe/{uid}/"
-        return self._get(url), index
+        return self.get(url), index
 
     def list_meals(self):
         url = f"{self.config.endpoint}/sync/meals/"
-        return self._get(url)
+        return self.get(url)
 
     @orm.db_session
     def debug(self):
-        breakpoint()
-        ...
+        api = self
+        code.interact(local=locals())
 
     @orm.db_session
     def fetch(self):
